@@ -1,0 +1,391 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: myKafkaCluster
+  namespace: mykafka
+spec:
+  kafka:
+    version: "3.2"
+    replicas: 3
+    listeners:
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+        authentication:
+          type: tls
+      - name: exttls
+        port: 9094
+        type: nodeport
+        tls: true
+        authentication:
+          type: tls
+    authorization:
+      type: simple
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+      inter.broker.protocol.version: "3.2"
+    storage:
+      type: persistent-claim
+      size: 10Gi
+      deleteClaim: false
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 2000m
+      requests:
+        memory: 2Gi
+        cpu: 100m
+    jvmOptions:
+      -Xms: 1536m
+      -Xmx: 1536m
+    # metricsConfig:
+    #   type: jmxPrometheusExporter
+    #   valueFrom:
+    #     configMapKeyRef:
+    #       name: kafka-metrics
+    #       key: kafka-metrics-config.yml
+  zookeeper:
+    replicas: 3
+    storage:
+      type: persistent-claim
+      size: 4Gi
+      deleteClaim: false
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 2000m
+      requests:
+        memory: 1Gi
+        cpu: 100m
+    jvmOptions:
+      -Xms: 756m
+      -Xmx: 756m
+    # metricsConfig:
+    #   type: jmxPrometheusExporter
+    #   valueFrom:
+    #     configMapKeyRef:
+    #       name: kafka-metrics
+    #       key: zookeeper-metrics-config.yml
+  entityOperator:
+    tlsSidecar:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 128Mi
+    topicOperator:
+      watchedNamespace: mykafka
+      reconciliationIntervalSeconds: 60
+      logging:
+        type: inline
+        loggers:
+          rootLogger.level: "WARN"
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: "1"
+        limits:
+          memory: 256Mi
+          cpu: "1"
+    userOperator:
+      watchedNamespace: mykafka
+      reconciliationIntervalSeconds: 60
+      logging:
+        type: inline
+        loggers:
+          rootLogger.level: WARN
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: "1"
+        limits:
+          memory: 512Mi
+          cpu: "1"
+  kafkaExporter:
+    topicRegex: ".*"
+    groupRegex: ".*"
+---
+# This could exist in other places for self-service style topic management
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: tuttopic
+  namespace: mykafka
+  labels:
+    strimzi.io/cluster: myKafkaCluster
+spec:
+  partitions: 9
+  replicas: 3
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
+---
+# Users should be managed by the Kafka cluster owners (SRE) in this repo
+# Note that the Topic and User operators can look in specific namespaces
+# and those namespaces can be locked down via RBAC
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: tutuser
+  namespace: myKafka
+  labels:
+    strimzi.io/cluster: myKafkaCluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      # Example consumer Acls for topic opentopic using consumer group opengroup
+      - resource:
+          type: topic
+          name: tuttopic
+          patternType: literal
+        operation: Read
+        host: "*"
+      - resource:
+          type: group
+          name: tutgroup
+          patternType: literal
+        operation: Read
+        host: "*"
+      # Example Producer Acls for topic opentopic
+      - resource:
+          type: topic
+          name: tuttopic
+          patternType: literal
+        operation: Write
+        host: "*"
+      - resource:
+          type: topic
+          name: tuttopic
+          patternType: literal
+        operation: Create
+        host: "*"
+      # Example Producer AND Consumer Acls for topic opentopic
+      - resource:
+          type: topic
+          name: tuttopic
+          patternType: literal
+        operation: Describe
+        host: "*"
+---
+# apiVersion: monitoring.coreos.com/v1
+# kind: PodMonitor
+# metadata:
+#   name: kafka-metrics-mykafka
+#   namespace: mykafka
+#   labels:
+#     app: strimzi
+# spec:
+#   selector:
+#     matchExpressions:
+#       - key: "strimzi.io/kind"
+#         operator: In
+#         values: ["Kafka", "KafkaMirrorMaker", "KafkaMirrorMaker2"]
+#   namespaceSelector:
+#     matchNames:
+#       - mykafka
+#   podMetricsEndpoints:
+#   - path: /metrics
+#     port: tcp-prometheus
+#     relabelings:
+#     - separator: ;
+#       regex: __meta_kubernetes_pod_label_(strimzi_io_.+)
+#       replacement: $1
+#       action: labelmap
+#     - sourceLabels: [__meta_kubernetes_namespace]
+#       separator: ;
+#       regex: (.*)
+#       targetLabel: namespace
+#       replacement: $1
+#       action: replace
+#     - sourceLabels: [__meta_kubernetes_pod_name]
+#       separator: ;
+#       regex: (.*)
+#       targetLabel: kubernetes_pod_name
+#       replacement: $1
+#       action: replace
+#     - sourceLabels: [__meta_kubernetes_pod_node_name]
+#       separator: ;
+#       regex: (.*)
+#       targetLabel: node_name
+#       replacement: $1
+#       action: replace
+#     - sourceLabels: [__meta_kubernetes_pod_host_ip]
+#       separator: ;
+#       regex: (.*)
+#       targetLabel: node_ip
+#       replacement: $1
+#       action: replace
+# ---
+# kind: ConfigMap
+# apiVersion: v1
+# metadata:
+#   name: kafka-metrics
+#   namespace: mykafka
+#   labels:
+#     app: strimzi
+# data:
+#   kafka-metrics-config.yml: |
+#     # See https://github.com/prometheus/jmx_exporter for more info about JMX Prometheus Exporter metrics
+#     lowercaseOutputName: true
+#     rules:
+#     # Special cases and very specific rules
+#     - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+#       name: kafka_server_$1_$2
+#       type: GAUGE
+#       labels:
+#        clientId: "$3"
+#        topic: "$4"
+#        partition: "$5"
+#     - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)><>Value
+#       name: kafka_server_$1_$2
+#       type: GAUGE
+#       labels:
+#        clientId: "$3"
+#        broker: "$4:$5"
+#     - pattern: kafka.server<type=(.+), cipher=(.+), protocol=(.+), listener=(.+), networkProcessor=(.+)><>connections
+#       name: kafka_server_$1_connections_tls_info
+#       type: GAUGE
+#       labels:
+#         cipher: "$2"
+#         protocol: "$3"
+#         listener: "$4"
+#         networkProcessor: "$5"
+#     - pattern: kafka.server<type=(.+), clientSoftwareName=(.+), clientSoftwareVersion=(.+), listener=(.+), networkProcessor=(.+)><>connections
+#       name: kafka_server_$1_connections_software
+#       type: GAUGE
+#       labels:
+#         clientSoftwareName: "$2"
+#         clientSoftwareVersion: "$3"
+#         listener: "$4"
+#         networkProcessor: "$5"
+#     - pattern: "kafka.server<type=(.+), listener=(.+), networkProcessor=(.+)><>(.+):"
+#       name: kafka_server_$1_$4
+#       type: GAUGE
+#       labels:
+#        listener: "$2"
+#        networkProcessor: "$3"
+#     - pattern: kafka.server<type=(.+), listener=(.+), networkProcessor=(.+)><>(.+)
+#       name: kafka_server_$1_$4
+#       type: GAUGE
+#       labels:
+#        listener: "$2"
+#        networkProcessor: "$3"
+#     # Some percent metrics use MeanRate attribute
+#     # Ex) kafka.server<type=(KafkaRequestHandlerPool), name=(RequestHandlerAvgIdlePercent)><>MeanRate
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*><>MeanRate
+#       name: kafka_$1_$2_$3_percent
+#       type: GAUGE
+#     # Generic gauges for percents
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*><>Value
+#       name: kafka_$1_$2_$3_percent
+#       type: GAUGE
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*, (.+)=(.+)><>Value
+#       name: kafka_$1_$2_$3_percent
+#       type: GAUGE
+#       labels:
+#         "$4": "$5"
+#     # Generic per-second counters with 0-2 key/value pairs
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+), (.+)=(.+)><>Count
+#       name: kafka_$1_$2_$3_total
+#       type: COUNTER
+#       labels:
+#         "$4": "$5"
+#         "$6": "$7"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+)><>Count
+#       name: kafka_$1_$2_$3_total
+#       type: COUNTER
+#       labels:
+#         "$4": "$5"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*><>Count
+#       name: kafka_$1_$2_$3_total
+#       type: COUNTER
+#     # Generic gauges with 0-2 key/value pairs
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Value
+#       name: kafka_$1_$2_$3
+#       type: GAUGE
+#       labels:
+#         "$4": "$5"
+#         "$6": "$7"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Value
+#       name: kafka_$1_$2_$3
+#       type: GAUGE
+#       labels:
+#         "$4": "$5"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)><>Value
+#       name: kafka_$1_$2_$3
+#       type: GAUGE
+#     # Emulate Prometheus 'Summary' metrics for the exported 'Histogram's.
+#     # Note that these are missing the '_sum' metric!
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Count
+#       name: kafka_$1_$2_$3_count
+#       type: COUNTER
+#       labels:
+#         "$4": "$5"
+#         "$6": "$7"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*), (.+)=(.+)><>(\d+)thPercentile
+#       name: kafka_$1_$2_$3
+#       type: GAUGE
+#       labels:
+#         "$4": "$5"
+#         "$6": "$7"
+#         quantile: "0.$8"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Count
+#       name: kafka_$1_$2_$3_count
+#       type: COUNTER
+#       labels:
+#         "$4": "$5"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*)><>(\d+)thPercentile
+#       name: kafka_$1_$2_$3
+#       type: GAUGE
+#       labels:
+#         "$4": "$5"
+#         quantile: "0.$6"
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
+#       name: kafka_$1_$2_$3_count
+#       type: COUNTER
+#     - pattern: kafka.(\w+)<type=(.+), name=(.+)><>(\d+)thPercentile
+#       name: kafka_$1_$2_$3
+#       type: GAUGE
+#       labels:
+#         quantile: "0.$4"
+#   zookeeper-metrics-config.yml: |
+#     # See https://github.com/prometheus/jmx_exporter for more info about JMX Prometheus Exporter metrics
+#     lowercaseOutputName: true
+#     rules:
+#     # replicated Zookeeper
+#     - pattern: "org.apache.ZooKeeperService<name0=ReplicatedServer_id(\\d+)><>(\\w+)"
+#       name: "zookeeper_$2"
+#       type: GAUGE
+#     - pattern: "org.apache.ZooKeeperService<name0=ReplicatedServer_id(\\d+), name1=replica.(\\d+)><>(\\w+)"
+#       name: "zookeeper_$3"
+#       type: GAUGE
+#       labels:
+#         replicaId: "$2"
+#     - pattern: "org.apache.ZooKeeperService<name0=ReplicatedServer_id(\\d+), name1=replica.(\\d+), name2=(\\w+)><>(Packets\\w+)"
+#       name: "zookeeper_$4"
+#       type: COUNTER
+#       labels:
+#         replicaId: "$2"
+#         memberType: "$3"
+#     - pattern: "org.apache.ZooKeeperService<name0=ReplicatedServer_id(\\d+), name1=replica.(\\d+), name2=(\\w+)><>(\\w+)"
+#       name: "zookeeper_$4"
+#       type: GAUGE
+#       labels:
+#         replicaId: "$2"
+#         memberType: "$3"
+#     - pattern: "org.apache.ZooKeeperService<name0=ReplicatedServer_id(\\d+), name1=replica.(\\d+), name2=(\\w+), name3=(\\w+)><>(\\w+)"
+#       name: "zookeeper_$4_$5"
+#       type: GAUGE
+#       labels:
+#         replicaId: "$2"
+#         memberType: "$3"
