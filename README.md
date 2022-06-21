@@ -12,7 +12,7 @@ Once you have a cluster, install the Strimzi Operator to it using the following:
 
 ```bash
 helm repo add strimzi https://strimzi.io/charts/
-helm install strimzi/strimzi-kafka-operator --name strimzi-ops --namespace mykafka -f https://raw.githubusercontent.com/catalystsquad/example-kafka-client/main/strimzi_operator_values.yaml
+helm install strimzi-ops strimzi/strimzi-kafka-operator --namespace mykafka --create-namespace -f https://raw.githubusercontent.com/catalystsquad/example-kafka-client/main/strimzi_operator_values.yaml
 ```
 
 You can of course use any values file you wish, or copy that and adjust it.
