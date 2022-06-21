@@ -134,7 +134,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaUser
 metadata:
   name: tutuser
-  namespace: myKafka
+  namespace: mykafka
   labels:
     strimzi.io/cluster: myKafkaCluster
 spec:
