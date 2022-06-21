@@ -6,7 +6,7 @@ Spec of what each client codebase should be capable of coming when that's been s
 
 ## Setup Strimzi
 
-If you don't already have a kubernete cluster, I suggest creating a local one using [KinD](https://kind.sigs.k8s.io/docs/user/quick-start/) or [K3S](https://rancher.com/docs/k3s/latest/en/installation/) and we have an example [kind_cluster.yaml](kind_cluster.yaml) and you can use it like thus: `kind create cluster --config https://raw.githubusercontent.com/catalystsquad/example-kafka-client/main/kind_cluster_config.yaml`
+If you don't already have a kubernete cluster, I suggest creating a local one using [KinD](https://kind.sigs.k8s.io/docs/user/quick-start/) or [K3S](https://rancher.com/docs/k3s/latest/en/installation/) and we have an example [kind_cluster.yaml](kind_cluster.yaml) and you can use it like thus: `kind create cluster --name strimzi --config https://raw.githubusercontent.com/catalystsquad/example-kafka-client/main/kind_cluster_config.yaml`
 
 Once you have a cluster, install the Strimzi Operator to it using the following:
 
@@ -19,7 +19,7 @@ You can of course use any values file you wish, or copy that as a starting point
 
 Everything you need to create a kafka cluster is now accessible via `kubectl apply -f myKafka_cluster.yaml`
 
-This will create a production-like 3 broker and 3 zookeeper node kafka cluster. It will require about 12GB of RAM in your K8s cluster, so configure appropriately. If you are low on resources for this on your local machine, you can attempt to adjust resources lower. Keep in mind that Confluents suggestions for [minimum requirements](https://docs.confluent.io/platform/current/installation/system-requirements.html) are 64GB RAM per broker and 24 CPUs, so this is a heavy system to operate.
+This will create a production-like 3 broker and 3 zookeeper node kafka cluster. It will request about 12GB of RAM in your K8s cluster, so configure appropriately. If you are low on resources for this on your local machine, you can attempt to adjust resources lower. Keep in mind that Confluents suggestions for [minimum requirements](https://docs.confluent.io/platform/current/installation/system-requirements.html) are 64GB RAM per broker and 24 CPUs, so this is a heavy system to operate.
 
 You can also reduce the number of replicas, but this will be less useful for tutorial use since you're missing all the distributed pieces to experiment with.
 
@@ -36,3 +36,9 @@ kubectl get secret tutuser -n mykafka -o json | jq -r '.data."user.key"' | base6
 ```
 
 Move them around appropriately and make sure you update your environment vars according to where they have moved.
+
+## Environment
+
+There is a shell script you can `source` in the root of this repo. `envsource.sh` should have sane defaults. You can override your own env vars. All clients should use these env vars for options on behavior and configuration. This is a cloud native approach, and not typically how Kafka itself is run, but in the Kubernetes world this makes a lot of composability easier.
+
+Once sourced, you should be set to run clients as needed.
