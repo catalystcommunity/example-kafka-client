@@ -1,11 +1,11 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: myKafkaCluster
+  name: mykafkacluster
   namespace: mykafka
 spec:
   kafka:
-    version: "3.2"
+    version: "3.2.0"
     replicas: 3
     listeners:
       - name: tls
@@ -134,7 +134,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaUser
 metadata:
   name: tutuser
-  namespace: myKafka
+  namespace: mykafka
   labels:
     strimzi.io/cluster: myKafkaCluster
 spec:
