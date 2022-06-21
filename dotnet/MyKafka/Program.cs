@@ -13,6 +13,8 @@ public class Example
         string? sslKeyLocation = Environment.GetEnvironmentVariable("MYKAFKA_TLSKEY_PATH");
         string? sslCaLocation = Environment.GetEnvironmentVariable("MYKAFKA_CACRT_PATH");
 
+        Console.WriteLine($"Cert related paths:\n{sslCertificateLocation}\n{sslKeyLocation}\n{sslCaLocation}");
+
         // Then validate we got them all
         if (boostrapServers == null) {
             varsSet = false;

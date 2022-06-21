@@ -14,6 +14,7 @@ public class MyKafkaProducer
             SslCertificateLocation = Environment.GetEnvironmentVariable("MYKAFKA_TLSCERT_PATH"),
             SslKeyLocation = Environment.GetEnvironmentVariable("MYKAFKA_TLSKEY_PATH"),
             SslCaLocation = Environment.GetEnvironmentVariable("MYKAFKA_CACRT_PATH"),
+            EnableSslCertificateVerification = false,
         };
     }
 
@@ -27,6 +28,7 @@ public class MyKafkaProducer
             SecurityProtocol = SecurityProtocol.Ssl,
             SslKeyLocation = SslKeyLocation,
             SslCaLocation = SslCaLocation,
+            EnableSslCertificateVerification = false,
         };
     }
     
