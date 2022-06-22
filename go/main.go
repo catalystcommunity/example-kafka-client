@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/catalystsquad/app-utils-go/env"
@@ -27,8 +28,8 @@ func main() {
 		Topic:                    env.GetEnvOrDefault("MYKAFKA_TOPIC", "tuttopic"),
 		GroupID:                  env.GetEnvOrDefault("MYKAFKA_GROUPID", "tutgroup"),
 		OffsetReset:              env.GetEnvAsBoolOrDefault("MYKAFKA_OFFSET_RESET", "true"),
-		TLSCertPath:              os.Getenv("MYKAFKA_TLSCERT_PATH"),
-		TLSKeyPath:               os.Getenv("MYKAFKA_TLSKEY_PATH"),
+		TLSCertPath:              requireEnv("MYKAFKA_TLSCERT_PATH"),
+		TLSKeyPath:               requireEnv("MYKAFKA_TLSKEY_PATH"),
 		CaCertPath:               os.Getenv("MYKAFKA_CACRT_PATH"),
 		MessageCount:             env.GetEnvAsIntOrDefault("MYKAFKA_MESSAGE_NUM", "3"),
 		SecurityProtocol:         "SSL",
@@ -40,4 +41,13 @@ func main() {
 
 	// connect as consumer
 	KafkaConsumerExample(cfg)
+}
+
+func requireEnv(env string) string {
+	value := os.Getenv(env)
+	if value == "" {
+		fmt.Printf("required environment variable not supplied: %s\n", env)
+		os.Exit(1)
+	}
+	return value
 }
