@@ -1,12 +1,12 @@
 # example-kafka-client
 
-Examples of kafka clients (Producers and Consumers) for various tech stacks, for use with Kafka tutorials
+Examples of kafka clients (Producers and Consumers) for various tech stacks, for use with Kafka tutorials. This is using a KinD cluster with Strimzi Operator installed, but you could replace it with any cluster
 
 Spec of what each client codebase should be capable of coming when that's been settled.
 
 ## Setup Strimzi
 
-If you don't already have a kubernete cluster, I suggest creating a local one using [KinD](https://kind.sigs.k8s.io/docs/user/quick-start/) or [K3S](https://rancher.com/docs/k3s/latest/en/installation/) and we have an example [kind_cluster.yaml](kind_cluster.yaml) and you can use it like thus:
+If you don't already have a kubernetes cluster, we suggest creating a local one using [KinD](https://kind.sigs.k8s.io/docs/user/quick-start/) or [K3S](https://rancher.com/docs/k3s/latest/en/installation/) and we have an example [kind_cluster.yaml](kind_cluster.yaml) with extra ports for accessing the Kafka brokers from external to the kubernetes cluster, and you can use it like thus:
 
 ```bash
 kind create cluster --name strimzi --config https://raw.githubusercontent.com/catalystsquad/example-kafka-client/main/kind_cluster_config.yaml
@@ -21,7 +21,11 @@ helm install strimzi-ops strimzi/strimzi-kafka-operator --namespace mykafka --cr
 
 You can of course use any values file you wish, or copy that as a starting point and adjust it.
 
-Everything you need to create a kafka cluster is now accessible via `kubectl apply -f myKafka_cluster.yaml`
+Everything you need to create a kafka cluster is now accessible via:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/catalystsquad/example-kafka-client/main/myKafka_cluster.yaml
+```
 
 This will create a production-like 3 broker and 3 zookeeper node kafka cluster. It will request about 12GB of RAM in your K8s cluster, so configure appropriately. If you are low on resources for this on your local machine, you can attempt to adjust resources lower. Keep in mind that Confluent's suggestions for [minimum requirements](https://docs.confluent.io/platform/current/installation/system-requirements.html) are 64GB RAM per broker and 24 CPUs, so this is a heavy system to operate.
 
