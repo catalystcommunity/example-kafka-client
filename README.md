@@ -45,8 +45,40 @@ kubectl get secret tutuser -n mykafka -o json | jq -r '.data."user.key"' | base6
 
 Move them around appropriately and make sure you update your environment vars according to where they have moved.
 
+## Setup Keystore (optional)
+
+We don't recommend setting this up, but it is useful if you want to play with clients (including the kafka cli scripts) that require java keystores and the like. This is largely untested, so be prepared to fiddle quite a bit for your specific instance of a kafka cluster. As an example, it is useful in how close it will be to whatever you need, but Kafka has never made TLS management or usage easy.
+
+If we want to use kafka cli commands or similar like the [Strimzi CLI (kfk)](https://github.com/systemcraftsman/strimzi-kafka-cli#installation) (third party tool) we'll need to setup a keystore, because Java. The keytool command comes with a JDK, so install your favorite and do the following:
+
+```bash
+echo "yes" | keytool -import -trustcacerts -file kafkaca.crt -keystore truststore.jks -storepass tutpass
+openssl pkcs12 -export -in tutuser.crt -inkey tutuser.key -name tutuser -password pass:tutpass -out tutuser.p12
+```
+
+And a client.properties config file for Kafka that looks like this:
+
+```text
+security.protocol=SSL
+ssl.keystore.location=./tutuser.p12
+ssl.keystore.password=tutpass
+ssl.truststore.location=./truststore.jks
+ssl.truststore.password=tutpass
+```
+
 ## Environment
 
 There is a shell script you can `source` in the root of this repo. `envsource.sh` should have sane defaults. You can override your own env vars. All clients should use these env vars for options on behavior and configuration. This is a cloud native approach, and not typically how Kafka itself is run, but in the Kubernetes world this makes a lot of composability easier.
 
-Once sourced, you should be set to run clients as needed.
+Once sourced, you should be set to run clients in this repo as needed.
+
+Env vars that are not included in that file which you may wish to set and manipulate as you play with the tools:
+
+- MYKAFKA_MESSAGE_NUM : The number of messages to produce and/or consume, defaulting to 20
+- MYKAFKA_TOPIC : The topic to work with producing and consuming, defaulting to "tuttopic"
+- MYKAFKA_CLIENT_DELAY_SECONDS : The amount of seconds producers and consumers should wait in between messages, which is useful to watch logs with. This defaults to 0 for no delays.
+- MYKAFKA_GROUPID : The group ID used for consuming, defaulting to "tutgroup". You should change this to tutgroup unless you have a different group control mechanism in mind.
+- MYKAFKA_SKIP_PRODUCE : Skips producing if set to "true" exactly, defaults to "false" which does not skip producing
+- MYKAFKA_SKIP_CONSUME : Skips consuming if set to "true" exactly, defaults to "false" which does not skip consuming
+
+If you wish to have a parallel producing and consuming, rather than a synchronous production followed by consumption, we recommend setting up two terminals, one where you set MYKAFKA_SKIP_CONSUME to "true" and the other you set MYKAFKA_SKIP_PRODUCE to "true" and then you can run them independently of each other. You can do this multiple times, but you will want to change the MYKAFKA_GROUPID if you want consumers to act separately from each other.

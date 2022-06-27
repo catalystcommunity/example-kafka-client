@@ -9,8 +9,6 @@ done
 THIS_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
 export MYKAFKA_BOOTSTRAP_SERVERS="127.0.0.1:32104"
-export MYKAFKA_MESSAGE_NUM=20
-export MYKAFKA_GROUPID="tutgroup"
 export MYKAFKA_TLSCERT_PATH="${THIS_DIR}/tutuser.crt"
 export MYKAFKA_TLSKEY_PATH="${THIS_DIR}/tutuser.key"
 export MYKAFKA_CACRT_PATH="${THIS_DIR}/kafkaca.crt"

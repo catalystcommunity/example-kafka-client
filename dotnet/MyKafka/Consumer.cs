@@ -4,37 +4,27 @@ using System.Net;
 public class MyKafkaConsumer
 {
     public ConsumerConfig Config { get; set; }
+    public long MessageNum { get; set; }
+    public int ClientDelay { get; set; }
+    public string KafkaTopic { get; set; }
 
-    public MyKafkaConsumer() // Empty constructor
-    {
-        bool outOffsetReset;
-        if (!Boolean.TryParse(Environment.GetEnvironmentVariable("MYKAFKA_OFFSET_RESET"), out outOffsetReset)) {
-            outOffsetReset = true;
-        }
-        Config = new ConsumerConfig
-        {
-            BootstrapServers = Environment.GetEnvironmentVariable("MYKAFKA_BOOTSTRAP_SERVERS"),
-            GroupId = Environment.GetEnvironmentVariable("MYKAFKA_GROUPID"),
-            AutoOffsetReset = outOffsetReset ? AutoOffsetReset.Earliest : AutoOffsetReset.Latest,
-            SslCertificateLocation = Environment.GetEnvironmentVariable("MYKAFKA_TLSCERT_PATH"),
-            SslKeyLocation = Environment.GetEnvironmentVariable("MYKAFKA_TLSKEY_PATH"),
-            SslCaLocation = Environment.GetEnvironmentVariable("MYKAFKA_CACRT_PATH"),
-            EnableSslCertificateVerification = false,
-        };
-    }
-
-    public MyKafkaConsumer(string bootStrapServers, string groupId, bool offsetReset, string SslCertificateLocation, string SslKeyLocation, string SslCaLocation)
+    public MyKafkaConsumer(string bootStrapServers, string groupId, bool offsetReset, string SslCertificateLocation, string SslKeyLocation, string SslCaLocation, long messageNum = 20, string kafkaTopic = "tuttopic", int clientDelay = 0)
     {
         Config = new ConsumerConfig
         {
             BootstrapServers = bootStrapServers,
             GroupId = groupId,
             AutoOffsetReset = offsetReset ? AutoOffsetReset.Earliest : AutoOffsetReset.Latest,
+            SecurityProtocol = SecurityProtocol.Ssl,
             SslCertificateLocation = SslCertificateLocation,
             SslKeyLocation = SslKeyLocation,
             SslCaLocation = SslCaLocation,
             EnableSslCertificateVerification = false,
+            MaxInFlight = 2,
         };
+        MessageNum = messageNum;
+        KafkaTopic = kafkaTopic;
+        ClientDelay = clientDelay;
     }
     
     public void ConsumeMessages() {
@@ -42,6 +32,14 @@ public class MyKafkaConsumer
         using (var consumer = new ConsumerBuilder<Ignore, string>(Config).Build())
         {
             Console.WriteLine("I'm in a consumer!");
+            consumer.Subscribe(KafkaTopic);
+            for (int i = 0; i < MessageNum; i++) {
+                var consumeResult = consumer.Consume();
+                Console.WriteLine($"I have consumed a message: {consumeResult.Message.Value} \nPartition: {consumeResult.Partition.Value} \nTimestamp: {consumeResult.Message.Timestamp.UtcDateTime}\n");
+                if (ClientDelay > 0) {
+                    System.Threading.Thread.Sleep(1000 * ClientDelay);
+                }
+            }
         }
     }
 }
