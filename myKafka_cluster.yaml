@@ -20,9 +20,26 @@ spec:
         tls: true
         authentication:
           type: tls
+        configuration:
+          bootstrap:
+            nodePort: 32104
+          brokers:
+          - broker: 0
+            nodePort: 32110
+            advertisedPort: 32110
+            advertisedHost: 127.0.0.1
+          - broker: 1
+            nodePort: 32111
+            advertisedPort: 32111
+            advertisedHost: 127.0.0.1
+          - broker: 2
+            nodePort: 32112
+            advertisedPort: 32112
+            advertisedHost: 127.0.0.1
     authorization:
       type: simple
     config:
+      ssl.endpoint.identification.algorithm: ""
       offsets.topic.replication.factor: 3
       transaction.state.log.replication.factor: 3
       transaction.state.log.min.isr: 2
@@ -119,7 +136,7 @@ metadata:
   name: tuttopic
   namespace: mykafka
   labels:
-    strimzi.io/cluster: myKafkaCluster
+    strimzi.io/cluster: mykafkacluster
 spec:
   partitions: 9
   replicas: 3
@@ -136,7 +153,7 @@ metadata:
   name: tutuser
   namespace: mykafka
   labels:
-    strimzi.io/cluster: myKafkaCluster
+    strimzi.io/cluster: mykafkacluster
 spec:
   authentication:
     type: tls
