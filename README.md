@@ -38,7 +38,7 @@ In order to do anything with this external to the cluster, we'll need to get the
 To download, these are commands that should work if you are in the roo of the repo of this Readme:
 
 ```bash
-kubectl get secret tutuser -n mykafka -o json | jq -r '.data."ca.crt"' | base64 -d > kafkaca.crt
+kubectl get secret mykafkacluster-cluster-ca-cert -n mykafka -o json | jq -r '.data."ca.crt"' | base64 -d > kafkaca.crt
 kubectl get secret tutuser -n mykafka -o json | jq -r '.data."user.crt"' | base64 -d > tutuser.crt
 kubectl get secret tutuser -n mykafka -o json | jq -r '.data."user.key"' | base64 -d > tutuser.key
 ```

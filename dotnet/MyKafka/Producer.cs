@@ -18,7 +18,7 @@ public class MyKafkaProducer
             SecurityProtocol = SecurityProtocol.Ssl,
             SslKeyLocation = SslKeyLocation,
             SslCaLocation = SslCaLocation,
-            EnableSslCertificateVerification = false,
+            EnableSslCertificateVerification = true,
             Partitioner = Partitioner.Random,
             MaxInFlight = 1,
         };
