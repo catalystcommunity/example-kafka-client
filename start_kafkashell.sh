@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# fail script of any command fails
+# fail script if any command fails
 set -e
 
 STRIMZI_VERSION=${STRIMZI_VERSION:-"0.29.0"}
