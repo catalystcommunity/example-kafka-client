@@ -33,7 +33,7 @@ func main() {
 		CaCertPath:               os.Getenv("MYKAFKA_CACRT_PATH"),
 		MessageCount:             env.GetEnvAsIntOrDefault("MYKAFKA_MESSAGE_NUM", "3"),
 		SecurityProtocol:         "SSL",
-		EnableSSLCerterification: false,
+		EnableSSLCerterification: true,
 	}
 
 	// connect as producer

@@ -19,7 +19,11 @@ public class MyKafkaConsumer
             SslCertificateLocation = SslCertificateLocation,
             SslKeyLocation = SslKeyLocation,
             SslCaLocation = SslCaLocation,
+<<<<<<< HEAD
             EnableSslCertificateVerification = false,
+=======
+            EnableSslCertificateVerification = true,
+>>>>>>> 72ff4c2316d20c29b663cbb2a775c7a6bb8d5f65
             MaxInFlight = 2,
         };
         MessageNum = messageNum;
