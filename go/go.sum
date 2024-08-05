@@ -1,5 +1,5 @@
-github.com/catalystsquad/app-utils-go v1.0.5 h1:4zlrrCzDwZ144+whL8PFd/UHK/Oo1/hriYzqDsob5dU=
-github.com/catalystsquad/app-utils-go v1.0.5/go.mod h1:MHFk4djQR+omJFRY3MhOs8U6biQl/BVZXWWlmULEjM8=
+github.com/catalystcommunity/app-utils-go v1.0.5 h1:4zlrrCzDwZ144+whL8PFd/UHK/Oo1/hriYzqDsob5dU=
+github.com/catalystcommunity/app-utils-go v1.0.5/go.mod h1:MHFk4djQR+omJFRY3MhOs8U6biQl/BVZXWWlmULEjM8=
 github.com/confluentinc/confluent-kafka-go v1.9.0 h1:d1k62oAuQVxgdMdiDQnpkABbtIWTBwXHpDcyGQUw5QQ=
 github.com/confluentinc/confluent-kafka-go v1.9.0/go.mod h1:WDFs+KlhHITEoCzEfHSNgj5aP7vjajyYbZpvTEGs1sE=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

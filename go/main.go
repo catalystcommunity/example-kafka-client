@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/catalystsquad/app-utils-go/env"
+	"github.com/catalystcommunity/app-utils-go/env"
 )
 
 // KafkaConfig contains all configuration options for producers and consumers
